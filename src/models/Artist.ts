@@ -7,14 +7,18 @@ const ArtistSchema = new Schema<IArtist>(
       type: Schema.Types.ObjectId,
       required: true,
       ref: "User",
+      unique: true,
     },
     bio: {
       type: String,
-      required: true,
+      required: false,
+      minLength: 30,
+      maxlength: 500,
     },
     specialties: {
       type: [String],
-      required: true,
+      required: false,
+      default: [],
     },
     portfolioIds: [
       {
