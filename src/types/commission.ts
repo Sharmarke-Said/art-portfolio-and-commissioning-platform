@@ -7,6 +7,12 @@ export interface IRenegotiation {
   createdAt: Date;
 }
 
+export type CommissionStatus =
+  | "Pending_Approval"
+  | "In_Progress"
+  | "Completed"
+  | "Cancelled";
+
 export interface ICommission {
   _id: Types.ObjectId;
   clientId: Types.ObjectId;
@@ -14,11 +20,7 @@ export interface ICommission {
   description: string;
   budget: number;
   dueDate: Date;
-  status:
-    | "Pending_Approval"
-    | "In_Progress"
-    | "Completed"
-    | "Cancelled";
+  status: CommissionStatus;
   renegotiations: IRenegotiation[];
   createdAt: Date;
   updatedAt: Date;
