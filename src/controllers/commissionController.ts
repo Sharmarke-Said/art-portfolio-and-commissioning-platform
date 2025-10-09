@@ -139,6 +139,22 @@ export const createCommission = async (c: Context) => {
       );
     }
 
+    const existingCommission = await Commission.findOne({
+      clientId,
+      artistId,
+      description,
+      status: { $ne: "Cancelled" },
+    });
+    if (existingCommission) {
+      return c.json(
+        {
+          status: "fail",
+          message: "A similar commission request already exists.",
+        },
+        400
+      );
+    }
+
     const commission = await Commission.create({
       clientId,
       artistId,
@@ -441,6 +457,17 @@ export const renegotiateCommission = async (c: Context) => {
           status: "fail",
           message:
             "Commission cannot be renegotiated in its current state",
+        },
+        400
+      );
+    }
+
+    if (commission.renegotiations.length > 0) {
+      return c.json(
+        {
+          status: "fail",
+          message:
+            "A renegotiation is already pending. Wait for client response.",
         },
         400
       );
