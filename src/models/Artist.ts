@@ -5,7 +5,7 @@ const ArtistSchema = new Schema<IArtist>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: [true, "User reference is required"],
       ref: "User",
       unique: true,
     },
