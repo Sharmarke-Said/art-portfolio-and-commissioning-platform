@@ -15,24 +15,40 @@ import {
   renegotiateCommission,
   completeCommission,
 } from "../controllers/commissionController";
+import {
+  protect,
+  restrictTo,
+} from "../middlewares/authMiddleware.ts";
 
 const commissionRoutes = new Hono();
 
+commissionRoutes.use("*", protect);
+
 // Admin routes
-commissionRoutes.get("/", getCommissions);
-commissionRoutes.get("/:id", getCommission);
-commissionRoutes.delete("/:id", deleteCommission);
+const adminRoutes = new Hono();
+adminRoutes.use("*", restrictTo("admin"));
+adminRoutes.get("/", getCommissions);
+adminRoutes.get("/:id", getCommission);
+adminRoutes.delete("/:id", deleteCommission);
 
 // Client routes
-commissionRoutes.post("/", createCommission);
-commissionRoutes.get("/client/:id", getMyCommissions);
-commissionRoutes.post("/:id/respond", respondToRenegotiation);
+const clientRoutes = new Hono();
+clientRoutes.use("*", restrictTo("user"));
+clientRoutes.post("/", createCommission);
+clientRoutes.get("/client/:id", getMyCommissions);
+clientRoutes.post("/:id/respond", respondToRenegotiation);
 
 // Artist routes
-commissionRoutes.get("/artist/:id", getAssignedCommissions);
-commissionRoutes.post("/:id/accept", acceptCommission);
-commissionRoutes.post("/:id/decline", declineCommission);
-commissionRoutes.post("/:id/renegotiate", renegotiateCommission);
-commissionRoutes.post("/:id/complete", completeCommission);
+const artistRoutes = new Hono();
+artistRoutes.use("*", restrictTo("artist"));
+artistRoutes.get("/artist/:id", getAssignedCommissions);
+artistRoutes.post("/:id/accept", acceptCommission);
+artistRoutes.post("/:id/decline", declineCommission);
+artistRoutes.post("/:id/renegotiate", renegotiateCommission);
+artistRoutes.post("/:id/complete", completeCommission);
+
+commissionRoutes.route("/", adminRoutes);
+commissionRoutes.route("/", clientRoutes);
+commissionRoutes.route("/", artistRoutes);
 
 export default commissionRoutes;

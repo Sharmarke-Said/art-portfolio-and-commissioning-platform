@@ -13,10 +13,11 @@ export const deleteCommission = factory.deleteOne(Commission);
 
 // Client
 export const createCommission = catchAsync(async (c: Context) => {
-  const { clientId, artistId, description, budget, dueDate } =
+  const clientId = c.get("user").id;
+  const { artistId, description, budget, dueDate } =
     await c.req.json();
 
-  if (!clientId || !artistId || !description || !budget || !dueDate) {
+  if (!artistId || !description || !budget || !dueDate) {
     throw new AppError("Please provide all required fields", 400);
   }
 
@@ -54,10 +55,9 @@ export const createCommission = catchAsync(async (c: Context) => {
 });
 
 export const getMyCommissions = catchAsync(async (c: Context) => {
-  const { id } = c.req.param();
-  if (!id) throw new AppError("Client ID is required", 400);
+  const clientId = c.get("user").id;
 
-  const commissions = await Commission.find({ clientId: id })
+  const commissions = await Commission.find({ clientId })
     .populate("artistId", "name email")
     .sort({ createdAt: -1 });
 
@@ -73,6 +73,7 @@ export const getMyCommissions = catchAsync(async (c: Context) => {
 
 export const respondToRenegotiation = catchAsync(
   async (c: Context) => {
+    const clientId = c.get("user").id;
     const { id } = c.req.param();
     const { action } = await c.req.json(); // 'accept' | 'decline'
 
@@ -88,6 +89,13 @@ export const respondToRenegotiation = catchAsync(
       "name email"
     );
     if (!commission) throw new AppError("Commission not found", 404);
+
+    if (commission.clientId.toString() !== clientId) {
+      throw new AppError(
+        "You are not authorized to respond to this commission",
+        403
+      );
+    }
 
     if (commission.status !== "Pending_Approval") {
       throw new AppError(
@@ -121,9 +129,9 @@ export const respondToRenegotiation = catchAsync(
 // Artist
 export const getAssignedCommissions = catchAsync(
   async (c: Context) => {
-    const { id } = c.req.param();
+    const artistId = c.get("user").id;
 
-    const commissions = await Commission.find({ artistId: id })
+    const commissions = await Commission.find({ artistId })
       .populate("clientId", "name email")
       .sort({ createdAt: -1 });
 
@@ -136,6 +144,7 @@ export const getAssignedCommissions = catchAsync(
 );
 
 export const acceptCommission = catchAsync(async (c: Context) => {
+  const artistId = c.get("user").id;
   const { id } = c.req.param();
 
   const commission = await Commission.findById(id).populate(
@@ -144,6 +153,14 @@ export const acceptCommission = catchAsync(async (c: Context) => {
   );
 
   if (!commission) throw new AppError("Commission not found", 404);
+
+  if (commission.artistId.toString() !== artistId) {
+    throw new AppError(
+      "You are not authorized to accept this commission",
+      403
+    );
+  }
+
   if (commission.status !== "Pending_Approval")
     throw new AppError(
       "Commission cannot be accepted in its current state",
@@ -161,6 +178,7 @@ export const acceptCommission = catchAsync(async (c: Context) => {
 });
 
 export const declineCommission = catchAsync(async (c: Context) => {
+  const artistId = c.get("user").id;
   const { id } = c.req.param();
 
   const commission = await Commission.findById(id).populate(
@@ -169,6 +187,14 @@ export const declineCommission = catchAsync(async (c: Context) => {
   );
 
   if (!commission) throw new AppError("Commission not found", 404);
+
+  if (commission.artistId.toString() !== artistId) {
+    throw new AppError(
+      "You are not authorized to decline this commission",
+      403
+    );
+  }
+
   if (commission.status !== "Pending_Approval")
     throw new AppError(
       "Commission cannot be declined in its current state",
@@ -187,6 +213,7 @@ export const declineCommission = catchAsync(async (c: Context) => {
 
 export const renegotiateCommission = catchAsync(
   async (c: Context) => {
+    const artistId = c.get("user").id;
     const { id } = c.req.param();
     const { message, newBudget, newDueDate } = await c.req.json();
 
@@ -199,6 +226,14 @@ export const renegotiateCommission = catchAsync(
     );
 
     if (!commission) throw new AppError("Commission not found", 404);
+
+    if (commission.artistId.toString() !== artistId) {
+      throw new AppError(
+        "You are not authorized to renegotiate this commission",
+        403
+      );
+    }
+
     if (commission.status !== "Pending_Approval")
       throw new AppError(
         "Commission cannot be renegotiated in its current state",
@@ -230,10 +265,19 @@ export const renegotiateCommission = catchAsync(
 );
 
 export const completeCommission = catchAsync(async (c: Context) => {
+  const artistId = c.get("user").id;
   const { id } = c.req.param();
 
   const commission = await Commission.findById(id);
   if (!commission) throw new AppError("Commission not found", 404);
+
+  if (commission.artistId.toString() !== artistId) {
+    throw new AppError(
+      "You are not authorized to complete this commission",
+      403
+    );
+  }
+
   if (commission.status !== "In_Progress")
     throw new AppError(
       "Commission is not in progress and cannot be completed",

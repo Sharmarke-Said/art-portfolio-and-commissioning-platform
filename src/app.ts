@@ -3,6 +3,8 @@ import userRoutes from "./routes/userRoutes";
 import artistRoutes from "./routes/artistRoutes";
 import artworkRoutes from "./routes/artworkRoutes";
 import commissionRoutes from "./routes/commissionRoutes";
+import authRoutes from "./routes/authRoutes";
+
 import { AppError } from "./utils/appError";
 import { globalErrorHandler } from "./controllers/errorController";
 
@@ -11,6 +13,7 @@ const app = new Hono();
 app.get("/", (c) => c.text("Hello Bun!"));
 
 // Mount routes
+app.route("/api/v1/auth", authRoutes);
 app.route("/api/v1/users", userRoutes);
 app.route("/api/v1/artists", artistRoutes);
 app.route("/api/v1/artworks", artworkRoutes);

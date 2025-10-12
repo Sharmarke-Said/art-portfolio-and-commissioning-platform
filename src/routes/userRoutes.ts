@@ -6,8 +6,15 @@ import {
   getUsers,
   updateUser,
 } from "../controllers/userController";
+import {
+  protect,
+  restrictTo,
+} from "../middlewares/authMiddleware.ts";
 
 const userRoutes = new Hono();
+
+userRoutes.use("*", protect);
+userRoutes.use("*", restrictTo("admin"));
 
 userRoutes.get("/", getUsers);
 userRoutes.post("/", createUser);

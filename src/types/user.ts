@@ -10,4 +10,8 @@ export interface IUser {
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;
+  correctPassword(
+    candidatePassword: string,
+    userPassword: string
+  ): Promise<boolean>;
 }
