@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: art-app
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/art_portfolio
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+    networks:
+      - backend
+
+  mongo:
+    image: mongo:7.0
+    container_name: art-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=art_portfolio
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    container_name: art-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2.8
+    container_name: art-caddy
+    depends_on:
+      - app
+    env_file:
+      - .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  mongo-data:
+  redis-data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  backend:
+    driver: bridge

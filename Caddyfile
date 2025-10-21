@@ -1,0 +1,26 @@
+{
+  # Optional: email you@example.com  # used for Let's Encrypt if DOMAIN is set
+  auto_https off
+}
+
+# Local development (no TLS)
+:80 {
+  # Proxy API requests to Bun app
+  reverse_proxy /api/* app:5000
+
+  # Optionally, if your backend serves everything under /
+  # reverse_proxy app:5000
+
+  # Access logs
+  log {
+    output stdout
+  }
+}
+
+# Optional production block for real domain (uncomment and set DOMAIN in .env)
+# {$DOMAIN} {
+#   reverse_proxy app:5000
+#   log {
+#     output file /data/access.log
+#   }
+# }
