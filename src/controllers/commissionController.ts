@@ -3,6 +3,9 @@ import { Commission } from "../models/Commission";
 import * as factory from "../utils/handleFactory";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/appError";
+import { notificationQueue } from "../jobs/queues/notificationQueue";
+import { paymentQueue } from "../jobs/queues/paymentQueue";
+import { User } from "../models/User";
 
 // Admin
 export const getCommissions = factory.getAll(Commission);
@@ -16,6 +19,8 @@ export const createCommission = catchAsync(async (c: Context) => {
   const clientId = c.get("user").id;
   const { artistId, description, budget, dueDate } =
     await c.req.json();
+
+  console.log("Logged user role:", c.get("user")?.role);
 
   if (!artistId || !description || !budget || !dueDate) {
     throw new AppError("Please provide all required fields", 400);
@@ -44,6 +49,21 @@ export const createCommission = catchAsync(async (c: Context) => {
     dueDate,
     status: "Pending_Approval",
   });
+
+  // await notificationQueue.add("new-commission", {
+  //   to: commission.artistId.email,
+  //   subject: "New Commission Request",
+  //   body: `You have a new commission request from ${commission.clientId.name}. Please login to your dashboard to view it.`,
+  // });
+  // 🔔 Notification
+  const artist = await User.findById(artistId);
+  if (artist?.email) {
+    await notificationQueue.add("new-commission", {
+      to: artist.email,
+      subject: "New Commission Request",
+      body: `You have a new commission request from client ${clientId}.`,
+    });
+  }
 
   return c.json(
     {
@@ -167,12 +187,16 @@ export const acceptCommission = catchAsync(async (c: Context) => {
       400
     );
 
-  commission.status = "In_Progress";
-  await commission.save();
+  // Queue payment job instead of directly updating status
+  // The payment worker will handle updating status to In_Progress after successful payment
+  await paymentQueue.add("process-payment", {
+    commissionId: commission._id.toString(),
+    artistId: artistId,
+  });
 
   return c.json({
     status: "success",
-    message: "Commission accepted successfully",
+    message: "Commission accepted. Payment processing initiated.",
     data: { commission },
   });
 });

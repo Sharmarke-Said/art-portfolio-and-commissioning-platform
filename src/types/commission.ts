@@ -13,6 +13,8 @@ export type CommissionStatus =
   | "Completed"
   | "Cancelled";
 
+export type PaymentStatus = "Pending" | "Paid" | "Failed";
+
 export interface ICommission {
   _id: Types.ObjectId;
   clientId: Types.ObjectId;
@@ -21,6 +23,7 @@ export interface ICommission {
   budget: number;
   dueDate: Date;
   status: CommissionStatus;
+  paymentStatus: PaymentStatus;
   renegotiations: IRenegotiation[];
   createdAt: Date;
   updatedAt: Date;

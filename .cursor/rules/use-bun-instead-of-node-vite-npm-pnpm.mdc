@@ -1,111 +1,51 @@
----
-description: Use Bun instead of Node.js, npm, pnpm, or vite.
-globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
-alwaysApply: false
----
+# Online Art Portfolio & Commissioning Platform (Backend Deep Dive with TypeScript & Asynchronous Job Queues)
 
-Default to using Bun instead of Node.js.
+# Assignment Overview:
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+This assignment evaluates an intern's ability to build a robust, scalable backend system for an online art portfolio and commissioning platform. The core challenge lies in designing a data model and implementing a sophisticated, event-driven system to handle complex, multi-step asynchronous processes for art commissions. The system must manage artist portfolios, client requests, commission lifecycles, and securely process payments and notifications. All backend code must be written in Bun, Hono.js, & TypeScript.
 
-## APIs
-
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
-
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
-```
-
-## Frontend
-
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
-
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
-```
-
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
-
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
-
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-
-// import .css files directly and it works
-import './index.css';
-
-import { createRoot } from "react-dom/client";
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+1. Functional Requirements (Highly Focused & Deepened)
+   The project focuses on three key areas: portfolio management, commission lifecycle, and the intricate asynchronous job queue for handling requests.
+   ● Portfolio & Art Management: Implement a system to manage artist profiles and their artwork. An artist can create a portfolio, upload artwork, and set prices. The artwork can be a physical piece for sale or a digital example for commissions. Each artwork should have attributes like title, description, medium, price, and status (e.g., For_Sale, Archived).
+   ● Commission Lifecycle Management: Design a system to handle the full lifecycle of an art commission request. A client can browse an artist's portfolio and submit a commission request. The request should include details like description, budget, due_date, and commission_status (e.g., Pending_Approval, In_Progress, Completed, Cancelled). The system must allow the artist to accept, decline, or renegotiate the request.
+   ● Killer Feature: Asynchronous Job Queue for Commission Processes: This is the most critical part of the assignment. The goal is to build a robust, event-driven backend using a job queue to manage the commission process.
+   ○ Automated Job Creation: When a new commission request is submitted, a new job should be created in the queue to notify the artist. Similarly, when an artist accepts a request, a job should be created to process the client's initial payment
+   and update the commission status.
+   ○ State-Based Processing: The system should use the commission_status to determine the next action. For example, a job to remind an artist to complete a commission should only be created if the commission_status is In_Progress and the due_date is approaching.
+   ○ Payment & Notification Handling: All long-running or external processes, like simulating a payment via an API call or sending a notification email, must be handled asynchronously by the job queue. This prevents the main API thread from being blocked. The job should then update the commission status upon success or failure.
+   ○ Expectation: This system should be designed to handle a high volume of requests without performance degradation. The use of a job queue is mandatory to demonstrate an understanding of asynchronous processing and distributed systems.
+2. Cross-Cutting Backend Concerns (Mandatory & Integrated)
+   These aspects must be deeply integrated into the development process.
+   ● TypeScript First: All backend application code must be written in TypeScript. Leverage interfaces, types, and strict compilation (tsconfig.json configured with strict: true or similar).
+   ● Structured Logging: Implement structured logging to track all critical events, including new commission requests, job successes/failures, and status changes.
+   ● Basic Auditing: Implement an append-only audit log for all security-sensitive and critical events, such as commission status changes, payment processing, and new artwork uploads.
+   ● Containerization with Docker & Docker Compose: Provide a docker-compose.yml file that orchestrates the entire development environment, including the Node.js API service, a database (e.g., PostgreSQL or MongoDB), Redis for the job queue, and an API Gateway (e.g., Caddy).
+   ● API Gateway (Caddy) Setup: Configure Caddy to act as a reverse proxy, handling TLS termination and request logging for the Node.js backend.
+   ● Background Jobs: Use a background job system (e.g., BullMQ with Redis) to handle all asynchronous tasks.
+   ● Robust Testing: Write comprehensive unit and integration tests (in TypeScript) for all core functionalities, with a specific focus on the asynchronous job queue, ensuring that jobs are created, processed, and their results correctly update the system state.
+3. Deliverables & Phased Approach
+   Complete the following deliverables over a 1-month timeline. Provide a full solution in a public Git repository with a clear commit history and comprehensive documentation.
+   Phase 1: Core Infrastructure & Data Models (Weeks 1-1.5)
+   ● Database Models: Design and implement database schemas for Users, Artists, Artworks, Commissions, and AuditLogs.
+   ● Containerized Environment: Deliver a working docker-compose.yml file that sets up your Node.js application, database, Redis, and Caddy services.
+   ● API Gateway: Provide an initial Caddyfile for reverse proxying and logging.
+   ● Portfolio APIs: Implement CRUD for artists and their artwork.
+   ● Commission APIs: Implement APIs for a client to submit a new commission request and an artist to view it.
+   Phase 2: Core Asynchronous Logic (Weeks 1.5-3)
+   ● Killer Feature: Job Queue: Implement the job queue system using Redis and a library like BullMQ.
+   ● Automated Job Creation: Hook up the API endpoints to create jobs for each step of the commission lifecycle (e.g., request submission, artist acceptance, payment simulation, and completion).
+   ● Job Processor: Write a dedicated worker process that consumes jobs from the queue, processes them (e.g., updates commission status, simulates payment, etc.), and handles success/failure scenarios.
+   ● Basic Auditing: Capture and store audit logs for critical events related to commission status changes and job processing.
+   Phase 3: Robustness, Testing, & Documentation (Week 3-4)
+   ● Advanced Logic: Add logic to handle commission cancellation and renegotiation, triggering appropriate jobs and status changes. Implement logic for automated reminders and deadlines.
+   ● Comprehensive Testing: Write extensive unit and integration tests for the job queue system, ensuring that different types of jobs are correctly created, processed, and that their results are reflected in the database.
+   ● CI/CD Pipeline: Deliver a complete .gitlab-ci.yml file that defines and successfully runs the lint, test, and build stages.
+   ● Comprehensive Documentation: Provide a detailed README.md with setup instructions, API documentation, and an architectural overview explaining the asynchronous job queue's design and how it manages the commission lifecycle.
+4. Evaluation Criteria
+   ● Correctness & Completeness: Meets all functional requirements, especially the intricacies of the asynchronous job queue and event-driven commission lifecycle.
+   ● Code Quality: Readability, modularity, adherence to best practices, and strong TypeScript usage.
+   ● Design: Consistent API design, clear database schemas, and a robust implementation of the job queue and its workers.
+   ● Operational Readiness: Correctness and completeness of the Docker/Docker Compose setup, Caddy configuration, and background job implementation.
+   ● Testing: Coverage and effectiveness of unit and integration tests, particularly for the asynchronous nature of the system.
+   ● CI/CD: Functional and well-defined GitLab CI/CD pipeline.
+   ● Delivery: Adherence to the phased timeline, clear Git history, and comprehensive documentation.

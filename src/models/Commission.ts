@@ -35,6 +35,11 @@ const CommissionSchema = new Schema<ICommission>(
       ],
       default: "Pending_Approval",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed"],
+      default: "Pending",
+    },
     renegotiations: [
       {
         type: Schema.Types.Mixed,

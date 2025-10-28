@@ -24,31 +24,50 @@ const commissionRoutes = new Hono();
 
 commissionRoutes.use("*", protect);
 
-// Admin routes
-const adminRoutes = new Hono();
-adminRoutes.use("*", restrictTo("admin"));
-adminRoutes.get("/", getCommissions);
-adminRoutes.get("/:id", getCommission);
-adminRoutes.delete("/:id", deleteCommission);
+commissionRoutes.get("/", restrictTo("admin"), getCommissions);
+commissionRoutes.get("/:id", restrictTo("admin"), getCommission);
+commissionRoutes.delete(
+  "/:id",
+  restrictTo("admin"),
+  deleteCommission
+);
 
-// Client routes
-const clientRoutes = new Hono();
-clientRoutes.use("*", restrictTo("user"));
-clientRoutes.post("/", createCommission);
-clientRoutes.get("/client/:id", getMyCommissions);
-clientRoutes.post("/:id/respond", respondToRenegotiation);
+commissionRoutes.post("/", restrictTo("user"), createCommission);
+commissionRoutes.get(
+  "/client/:id",
+  restrictTo("user"),
+  getMyCommissions
+);
+commissionRoutes.post(
+  "/:id/respond",
+  restrictTo("user"),
+  respondToRenegotiation
+);
 
-// Artist routes
-const artistRoutes = new Hono();
-artistRoutes.use("*", restrictTo("artist"));
-artistRoutes.get("/artist/:id", getAssignedCommissions);
-artistRoutes.post("/:id/accept", acceptCommission);
-artistRoutes.post("/:id/decline", declineCommission);
-artistRoutes.post("/:id/renegotiate", renegotiateCommission);
-artistRoutes.post("/:id/complete", completeCommission);
-
-commissionRoutes.route("/", adminRoutes);
-commissionRoutes.route("/", clientRoutes);
-commissionRoutes.route("/", artistRoutes);
+commissionRoutes.get(
+  "/artist/:id",
+  restrictTo("artist"),
+  getAssignedCommissions
+);
+commissionRoutes.post(
+  "/:id/accept",
+  restrictTo("artist"),
+  acceptCommission
+);
+commissionRoutes.post(
+  "/:id/decline",
+  restrictTo("artist"),
+  declineCommission
+);
+commissionRoutes.post(
+  "/:id/renegotiate",
+  restrictTo("artist"),
+  renegotiateCommission
+);
+commissionRoutes.post(
+  "/:id/complete",
+  restrictTo("artist"),
+  completeCommission
+);
 
 export default commissionRoutes;

@@ -64,7 +64,12 @@ export const login = async (c: Context) => {
         status: "success",
         token,
         data: {
-          user: { id: user._id, username: user.username, email },
+          user: {
+            id: user._id,
+            username: user.username,
+            email,
+            role: user.role,
+          },
         },
       },
       200
