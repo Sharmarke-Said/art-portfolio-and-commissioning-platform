@@ -1,4 +1,5 @@
 // services/emailService.ts
+import logger from "../../utils/logger";
 
 interface EmailData {
   to: string;
@@ -17,20 +18,20 @@ export const sendEmail = async ({
   body,
   from = "noreply@yourapp.com",
 }: EmailData) => {
-  console.log("📧 Simulating email send...");
+  logger.debug({ to, subject }, "Simulating email send");
+
   await new Promise((res) => setTimeout(res, 1000)); // simulate network latency
 
-  console.log(`
-===========================
-📩 Email Sent (Simulated)
----------------------------
-From: ${from}
-To:   ${to}
-Subject: ${subject}
----------------------------
-${body}
-===========================
-  `);
+  logger.info(
+    {
+      from,
+      to,
+      subject,
+      bodyPreview:
+        body.substring(0, 100) + (body.length > 100 ? "..." : ""),
+    },
+    "Email sent (simulated)"
+  );
 
   return { success: true };
 };

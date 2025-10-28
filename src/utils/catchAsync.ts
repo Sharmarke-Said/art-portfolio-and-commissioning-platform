@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import logger from "./logger";
 
 /**
  * Utility to catch async route errors and pass them to the error handler.
@@ -7,8 +8,11 @@ export const catchAsync =
   (fn: (c: Context) => Promise<Response>) => async (c: Context) => {
     try {
       return await fn(c);
-    } catch (err) {
-      console.error("Caught async error:", err);
+    } catch (err: any) {
+      logger.error(
+        { error: err.message, stack: err.stack },
+        "Caught async error"
+      );
       // Re-throw so Hono's error handler or middleware can catch it
       throw err;
     }

@@ -1,9 +1,10 @@
 import { Queue } from "bullmq";
 import { redisConnection } from "../../config/redis";
+import logger from "../../utils/logger";
 
 export const createQueue = (queueName: string) => {
   const queue = new Queue(queueName, { connection: redisConnection });
 
-  console.log(`✅ Queue initialized: ${queueName}`);
+  logger.info({ queueName }, "Queue initialized");
   return queue;
 };

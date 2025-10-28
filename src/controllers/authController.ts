@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { User } from "../models/User.ts";
 import { signToken } from "../utils/jwt.ts";
 import bcrypt from "bcryptjs";
+import logger from "../utils/logger";
 
 export const signup = async (c: Context) => {
   try {
@@ -74,8 +75,11 @@ export const login = async (c: Context) => {
       },
       200
     );
-  } catch (err) {
-    console.error("Login error:", err);
+  } catch (err: any) {
+    logger.error(
+      { error: err.message, stack: err.stack },
+      "Login error"
+    );
     return c.json({ message: "Failed to log in" }, 500);
   }
 };

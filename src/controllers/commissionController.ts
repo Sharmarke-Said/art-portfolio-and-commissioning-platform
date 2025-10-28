@@ -6,6 +6,7 @@ import { AppError } from "../utils/appError";
 import { notificationQueue } from "../jobs/queues/notificationQueue";
 import { paymentQueue } from "../jobs/queues/paymentQueue";
 import { User } from "../models/User";
+import logger from "../utils/logger";
 
 // Admin
 export const getCommissions = factory.getAll(Commission);
@@ -20,7 +21,10 @@ export const createCommission = catchAsync(async (c: Context) => {
   const { artistId, description, budget, dueDate } =
     await c.req.json();
 
-  console.log("Logged user role:", c.get("user")?.role);
+  logger.debug(
+    { userId: clientId, role: c.get("user")?.role },
+    "Logged user"
+  );
 
   if (!artistId || !description || !budget || !dueDate) {
     throw new AppError("Please provide all required fields", 400);

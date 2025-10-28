@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import { verifyToken } from "../utils/jwt.ts";
 import { User } from "../models/User.ts";
+import logger from "../utils/logger";
 
 // Protect middleware — verifies token and attaches user
 export const protect = async (c: Context, next: Next) => {
@@ -26,8 +27,8 @@ export const protect = async (c: Context, next: Next) => {
     // Attach user to context
     c.set("user", user);
     await next();
-  } catch (err) {
-    console.error("Auth error:", err);
+  } catch (err: any) {
+    logger.error({ error: err.message }, "Auth error");
     return c.json({ message: "Invalid or expired token" }, 401);
   }
 };

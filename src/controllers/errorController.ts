@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { AppError } from "../utils/appError";
+import logger from "../utils/logger";
 
 const handleCastErrorDB = (err: any) =>
   new AppError(`Invalid ${err.path}: ${err.value}`, 400);
@@ -37,7 +38,17 @@ export const globalErrorHandler = (err: any, c: Context) => {
   const env = Bun.env.NODE_ENV || "development";
 
   if (env === "development") {
-    console.error("💥 ERROR:", err);
+    logger.error(
+      {
+        error: {
+          name: err.name,
+          message: err.message,
+          statusCode: err.statusCode,
+          stack: err.stack,
+        },
+      },
+      "ERROR occurred"
+    );
     return c.json(
       {
         status: err.status,
@@ -70,7 +81,16 @@ export const globalErrorHandler = (err: any, c: Context) => {
     );
   }
 
-  console.error("💥 UNKNOWN ERROR:", error);
+  logger.error(
+    {
+      error: {
+        name: error.name,
+        message: error.message,
+        statusCode: error.statusCode,
+      },
+    },
+    "UNKNOWN ERROR occurred"
+  );
   return c.json(
     {
       status: "error",

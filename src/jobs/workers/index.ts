@@ -1,17 +1,22 @@
 import "./notificationWorker";
 import "./paymentWorker";
 import connectDB from "../../config/db";
+import logger from "../../utils/logger";
 
 // Connect to database
 connectDB().then(() => {
-  console.log("🚀 All workers are running...");
-  console.log("📊 Monitoring payment and notification queues...");
+  logger.info("All workers are running");
+  logger.info(
+    { queues: ["payment-queue", "notification-queue"] },
+    "Monitoring payment and notification queues"
+  );
 });
 
 // Handle graceful shutdown
 const gracefulShutdown = async (signal: string) => {
-  console.log(
-    `\n📴 Received ${signal}. Shutting down workers gracefully...`
+  logger.warn(
+    { signal },
+    "Received shutdown signal. Shutting down workers gracefully..."
   );
   process.exit(0);
 };
