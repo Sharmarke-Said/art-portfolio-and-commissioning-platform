@@ -10,7 +10,7 @@ import { globalErrorHandler } from "./controllers/errorController";
 
 const app = new Hono();
 
-app.get("/", (c) => c.text("Hello Bun!"));
+app.get("/health-check", (c) => c.text("Server is running"));
 
 // Mount routes
 app.route("/api/v1/auth", authRoutes);
